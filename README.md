@@ -25,6 +25,7 @@ python generate.py --key A --scale minor --bpm 140 --bars 8 --seed 7
 
 | Parametre | Varsayılan | Açıklama |
 |---|---|---|
+| `--style` | `trap` | `trap`: akor+808+trap davul · `rock`: power chord riff + gitar lead + rock davul |
 | `--key` | `A` | Ton: `C`, `C#`, `D`, ... `B` |
 | `--scale` | `minor` | `minor`, `major`, `harmonic_minor`, `dorian`, `phrygian`, `minor_pentatonic`, `major_pentatonic` |
 | `--bpm` | `140` | Tempo |
@@ -43,6 +44,9 @@ python generate.py --key F --scale phrygian --bpm 144
 
 # Pop/melodik bir şey
 python generate.py --key C --scale major --bpm 120
+
+# Elektro gitarlı rock (riff'e distortion'lı gitar, lead'e solo gitar sound'u ata)
+python generate.py --style rock --key E --scale minor --bpm 130
 
 # Beğenene kadar farklı seed dene
 python generate.py --seed 1

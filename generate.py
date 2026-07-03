@@ -15,7 +15,10 @@ import argparse
 import os
 import random
 
-from midikit.generators import gen_bass, gen_chords, gen_drums, gen_melody, pick_progression
+from midikit.generators import (
+    gen_bass, gen_chords, gen_drums, gen_melody,
+    gen_power_chords, gen_rock_bass, gen_rock_drums, pick_progression,
+)
 from midikit.midi import write_midi
 from midikit.theory import NOTE_NAMES, SCALES
 
@@ -28,6 +31,8 @@ def main() -> None:
     ap.add_argument("--scale", default="minor", choices=sorted(SCALES), help="gam")
     ap.add_argument("--bpm", type=float, default=140, help="tempo")
     ap.add_argument("--bars", type=int, default=8, help="olcu sayisi")
+    ap.add_argument("--style", default="trap", choices=("trap", "rock"),
+                    help="trap: 808 + trap davul | rock: power chord riff + rock davul")
     ap.add_argument("--seed", type=int, default=None, help="ayni seed = ayni muzik")
     ap.add_argument("--out", default="output", help="cikti klasoru")
     args = ap.parse_args()
@@ -37,14 +42,22 @@ def main() -> None:
     os.makedirs(args.out, exist_ok=True)
 
     degrees = pick_progression(rng, args.scale, args.bars)
-    parts = {
-        "chords": gen_chords(rng, args.key, args.scale, degrees),
-        "melody": gen_melody(rng, args.key, args.scale, degrees),
-        "bass": gen_bass(rng, args.key, args.scale, degrees),
-        "drums": gen_drums(rng, args.bars),
-    }
+    if args.style == "rock":
+        parts = {
+            "guitar_riff": gen_power_chords(rng, args.key, args.scale, degrees),
+            "guitar_lead": gen_melody(rng, args.key, args.scale, degrees),
+            "bass": gen_rock_bass(rng, args.key, args.scale, degrees),
+            "drums": gen_rock_drums(rng, args.bars),
+        }
+    else:
+        parts = {
+            "chords": gen_chords(rng, args.key, args.scale, degrees),
+            "melody": gen_melody(rng, args.key, args.scale, degrees),
+            "bass": gen_bass(rng, args.key, args.scale, degrees),
+            "drums": gen_drums(rng, args.bars),
+        }
 
-    prefix = f"{args.key}{args.scale}_{int(args.bpm)}bpm_seed{seed}"
+    prefix = f"{args.style}_{args.key}{args.scale}_{int(args.bpm)}bpm_seed{seed}"
     for name, notes in parts.items():
         path = os.path.join(args.out, f"{prefix}_{name}.mid")
         write_midi(path, args.bpm, {name: notes})

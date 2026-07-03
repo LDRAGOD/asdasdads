@@ -86,6 +86,64 @@ def gen_melody(rng: random.Random, key: str, scale_name: str, degrees: list[int]
     return notes
 
 
+def gen_power_chords(rng: random.Random, key: str, scale_name: str, degrees: list[int]) -> list[Note]:
+    """Elektro gitar icin power chord riff'i: kok + 5'li + oktav, 8'lik chug'lar."""
+    scale = SCALES[scale_name]
+    root = root_midi(key, 2)
+    # 8'lik vuruslar: (baslangic_16lik, sure_16lik) - bosluklar riff hissi verir
+    riffs = [
+        [(0, 2), (2, 2), (4, 2), (6, 2), (8, 2), (10, 2), (12, 4)],
+        [(0, 3), (3, 3), (6, 2), (8, 3), (11, 3), (14, 2)],
+        [(0, 2), (2, 2), (4, 4), (8, 2), (10, 2), (12, 2), (14, 2)],
+        [(0, 6), (6, 2), (8, 6), (14, 2)],
+    ]
+    notes = []
+    for bar, deg in enumerate(degrees):
+        pitch = scale_note(root, scale, deg)
+        for start, dur in rng.choice(riffs):
+            vel = rng.randint(100, 118)
+            for interval in (0, 7, 12):  # kok, 5'li, oktav
+                notes.append(Note(bar * BAR + start * SIXTEENTH,
+                                  dur * SIXTEENTH - 20, pitch + interval, vel))
+    return notes
+
+
+def gen_rock_bass(rng: random.Random, key: str, scale_name: str, degrees: list[int]) -> list[Note]:
+    """Rock bass: kok notayi 8'liklerle pompalar, ara sira oktav atlar."""
+    scale = SCALES[scale_name]
+    root = root_midi(key, 1)
+    notes = []
+    for bar, deg in enumerate(degrees):
+        pitch = scale_note(root, scale, deg)
+        for eighth in range(8):
+            p = pitch + (12 if rng.random() < 0.12 else 0)
+            notes.append(Note(bar * BAR + eighth * 2 * SIXTEENTH,
+                              2 * SIXTEENTH - 15, p, rng.randint(98, 112)))
+    return notes
+
+
+def gen_rock_drums(rng: random.Random, bars: int) -> list[Note]:
+    """Klasik rock ritmi: kick 1 ve 3'te, snare 2 ve 4'te, duz 8'lik hi-hat."""
+    notes = []
+
+    def hit(bar, sixteenth, pitch, vel, dur=SIXTEENTH // 2):
+        notes.append(Note(bar * BAR + sixteenth * SIXTEENTH, dur, pitch, vel, channel=9))
+
+    for bar in range(bars):
+        hit(bar, 0, KICK, 118)
+        hit(bar, 8, KICK, 112)
+        if rng.random() < 0.5:  # senkoplu ekstra kick
+            hit(bar, rng.choice((6, 7, 10)), KICK, 100)
+        hit(bar, 4, SNARE, 116)
+        hit(bar, 12, SNARE, 116)
+        for eighth in range(8):
+            hit(bar, eighth * 2, CHAT, 92 if eighth % 2 == 0 else 74)
+        if bar % 4 == 3:  # 4 olcude bir mini dolgu
+            hit(bar, 14, SNARE, 90)
+            hit(bar, 15, SNARE, 104)
+    return notes
+
+
 def gen_drums(rng: random.Random, bars: int) -> list[Note]:
     """Trap tarzi davul: agir kick, 3. vurusta snare/clap, isleyen hi-hat."""
     notes = []
